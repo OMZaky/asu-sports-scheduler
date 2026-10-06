@@ -4,6 +4,7 @@ import { useState } from "react";
 import TimeGrid, { Slot } from "@/components/TimeGrid";
 import { SparklesText } from "@/components/magicui/sparkles-text";
 import { FloatingFootballs } from "@/components/FloatingFootballs";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function Home() {
   const [teamName, setTeamName] = useState("");
@@ -29,14 +30,38 @@ export default function Home() {
 
     setIsSubmitting(true);
     
-    // Simulate API call to Supabase
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    // Here we would typically save to Supabase:
-    // await supabase.from('teams').insert({ name: teamName, captain: captainName, availability: availability })
-    
-    setIsSubmitting(false);
-    setSubmitted(true);
+    try {
+      // 1. Insert team
+      const { data: teamData, error: teamError } = await supabase
+        .from('teams')
+        .insert({ team_name: teamName, captain_name: captainName })
+        .select()
+        .single();
+        
+      if (teamError) throw teamError;
+      
+      const teamId = teamData.id;
+      
+      // 2. Insert availability
+      const availabilityInserts = availability.map(slot => ({
+        team_id: teamId,
+        day: slot.day,
+        time: slot.time
+      }));
+      
+      const { error: availError } = await supabase
+        .from('availability')
+        .insert(availabilityInserts);
+        
+      if (availError) throw availError;
+      
+      setSubmitted(true);
+    } catch (error) {
+      console.error("Error submitting:", error);
+      alert("There was an error saving your availability. Please check your connection and try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (submitted) {
