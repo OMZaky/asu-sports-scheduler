@@ -1,49 +1,64 @@
-import json
+import os
 import itertools
 from collections import defaultdict
 import random
+from dotenv import load_dotenv
+from supabase import create_client, Client
 
 def get_minutes(time_str):
     """Convert HH:MM to minutes from midnight."""
     h, m = map(int, time_str.split(':'))
     return h * 60 + m
 
-def is_adjacent(slot1, slot2):
-    """Check if two slots are on the same day and exactly 30 mins apart."""
-    day1, time1 = slot1.split('-')
-    day2, time2 = slot2.split('-')
-    if day1 != day2:
-        return False
-    return abs(get_minutes(time1) - get_minutes(time2)) == 30
 
-def generate_schedule(data_file):
-    # 1. Load Data
-    try:
-        with open(data_file, 'r') as f:
-            teams_data = json.load(f)
-    except FileNotFoundError:
-        print(f"Please create {data_file} with the collected data.")
+
+def generate_schedule():
+    # 1. Connect to Supabase and Load Data
+    env_path = os.path.join(os.path.dirname(__file__), "web", ".env.local")
+    load_dotenv(dotenv_path=env_path)
+    url = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
+    key = os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+    
+    if not url or not key:
+        print("Error: Supabase URL or Key not found in .env file.")
         return
 
-    teams = [t['teamName'] for t in teams_data]
+    supabase: Client = create_client(url, key)
+    
+    print("Fetching data from Supabase...")
+    teams_response = supabase.table("teams").select("*").execute()
+    availability_response = supabase.table("availability").select("*").execute()
+    
+    teams_data = teams_response.data
+    avail_data = availability_response.data
+    
+    if not teams_data:
+        print("No teams found in the database. Please submit some teams on the website first!")
+        return
+
+    teams = [t['team_name'] for t in teams_data]
+    
+    # Map team_id to team_name
+    team_id_to_name = {t['id']: t['team_name'] for t in teams_data}
+    
+    availability_map = defaultdict(set)
+    for a in avail_data:
+        team_name = team_id_to_name.get(a['team_id'])
+        if team_name:
+            availability_map[team_name].add(f"{a['day']}-{a['time']}")
+
     if len(teams) < 4:
-        print("Need at least 4 teams for Group Stages + Knockouts.")
+        print(f"Only {len(teams)} teams registered. Need at least 4 teams for Group Stages + Knockouts.")
         return
-
-    availability_map = {}
-    for t in teams_data:
-        slots = set([f"{s['day']}-{s['time']}" for s in t['availability']])
-        availability_map[t['teamName']] = slots
 
     # 2. Tournament Structure: Group Stages
-    print("--- 🎲 TOURNAMENT DRAW 🎲 ---")
+    print("\n--- TOURNAMENT DRAW (GROUP STAGE) ---")
     random.shuffle(teams)
     
     group_size = 4
     groups = [teams[i:i + group_size] for i in range(0, len(teams), group_size)]
     
     matches = []
-    
     for i, group in enumerate(groups):
         print(f"Group {chr(65+i)}: {', '.join(group)}")
         group_matches = list(itertools.combinations(group, 2))
@@ -66,28 +81,23 @@ def generate_schedule(data_file):
         team_a, team_b = match_info["teams"]
         common_slots = list(availability_map[team_a].intersection(availability_map[team_b]))
         
-        # Determine the best slot based on consecutive matches & prime time
         def score_slot(slot):
             bonus = 0
-            # If the slot is adjacent to ANY already scheduled match for team A, they get a bonus (consecutive matches)
-            if any(is_adjacent(slot, existing) for existing in team_schedule[team_a]):
-                bonus += 2  # +2 weight for consecutive
-            # If the slot is adjacent to ANY already scheduled match for team B, they get a bonus
-            if any(is_adjacent(slot, existing) for existing in team_schedule[team_b]):
-                bonus += 2  # +2 weight for consecutive
-                
             day, time_str = slot.split('-')
-            time_mins = get_minutes(time_str)
             
-            # Prime time bonus: between 10 AM (600 mins) and 5 PM (1020 mins)
+            # Penalize multiple matches on the same day for either team (unfavored but acceptable)
+            if any(existing.startswith(f"{day}-") for existing in team_schedule[team_a]):
+                bonus -= 50
+            if any(existing.startswith(f"{day}-") for existing in team_schedule[team_b]):
+                bonus -= 50
+                
+            time_mins = get_minutes(time_str)
             if 600 <= time_mins <= 1020:
-                bonus += 1  # +1 weight for prime time
+                bonus += 1
 
-            # We want to sort by bonus DESCENDING, and then chronologically ascending.
-            days_order = {"Monday": 1, "Tuesday": 2, "Wednesday": 3, "Thursday": 4, "Friday": 5, "Saturday": 6, "Sunday": 7}
-            return (-bonus, days_order.get(day, 8), time_mins)
+            days_order = {"Saturday": 1, "Sunday": 2, "Monday": 3, "Tuesday": 4, "Wednesday": 5, "Thursday": 6}
+            return (-bonus, days_order.get(day, 7), time_mins)
 
-        # Sort the common slots with our consecutive match scoring
         common_slots.sort(key=score_slot)
         
         scheduled = False
@@ -111,28 +121,74 @@ def generate_schedule(data_file):
         if not scheduled:
             unscheduled.append(f"{team_a} vs {team_b} ({match_info['type']})")
 
-    # 4. Output Results
-    print("--- 🏆 FINAL TOURNAMENT SCHEDULE 🏆 ---")
+    # 4. Knockout Stage Logic
+    # We will reserve slots on the latest available days for the knockouts.
+    # Quarter Finals (4 matches), Semi Finals (2 matches), Final (1 match).
+    print("--- SCHEDULING KNOCKOUT STAGE ---")
+    all_possible_slots = set()
+    for slots in availability_map.values():
+        all_possible_slots.update(slots)
+        
+    # Sort all slots chronologically so we can pick the LATEST ones for knockouts
+    days_order = {"Saturday": 1, "Sunday": 2, "Monday": 3, "Tuesday": 4, "Wednesday": 5, "Thursday": 6}
+    sorted_all_slots = sorted(list(all_possible_slots), key=lambda x: (days_order.get(x.split('-')[0], 7), get_minutes(x.split('-')[1])), reverse=True)
     
-    # Sort for final output
-    days_order = {"Monday": 1, "Tuesday": 2, "Wednesday": 3, "Thursday": 4, "Friday": 5, "Saturday": 6, "Sunday": 7}
-    final_schedule.sort(key=lambda x: (days_order.get(x["Time"].split('-')[0], 8), get_minutes(x["Time"].split('-')[1])))
+    knockout_matches = [
+        "Final (TBD vs TBD)",
+        "Semi-Final 1 (TBD vs TBD)",
+        "Semi-Final 2 (TBD vs TBD)",
+        "Quarter-Final 1 (TBD vs TBD)",
+        "Quarter-Final 2 (TBD vs TBD)",
+        "Quarter-Final 3 (TBD vs TBD)",
+        "Quarter-Final 4 (TBD vs TBD)"
+    ]
+    
+    for ko_match in knockout_matches:
+        scheduled = False
+        for slot in sorted_all_slots:
+            if booked_slots[slot] < MAX_CONCURRENT_MATCHES:
+                booked_slots[slot] += 1
+                pitch_num = booked_slots[slot]
+                final_schedule.append({
+                    "Match": ko_match,
+                    "Type": "Knockout",
+                    "Time": slot,
+                    "Pitch": f"Pitch {pitch_num}"
+                })
+                scheduled = True
+                break
+        if not scheduled:
+            unscheduled.append(f"{ko_match} (Knockout)")
+
+    # 5. Output Results
+    output_lines = []
+    output_lines.append("\n--- FINAL TOURNAMENT SCHEDULE ---")
+    
+    final_schedule.sort(key=lambda x: (days_order.get(x["Time"].split('-')[0], 7), get_minutes(x["Time"].split('-')[1])))
     
     current_time = None
     for match in final_schedule:
         if match["Time"] != current_time:
             current_time = match["Time"]
             day, time = current_time.split("-")
-            print(f"\n📅 {day} at {time}:")
+            output_lines.append(f"\n[ {day} at {time} ]")
             
-        print(f"  ⚽ [{match['Type']}] {match['Match']} ({match['Pitch']})")
+        output_lines.append(f"  - [{match['Type']}] {match['Match']} ({match['Pitch']})")
 
     if unscheduled:
-        print("\n⚠️ WARNING: Could not find common 30-min times for the following matches:")
+        output_lines.append("\nWARNING: Could not find available times for the following matches:")
         for m in unscheduled:
-            print(f"  - {m}")
+            output_lines.append(f"  - {m}")
     else:
-        print("\n✅ All group stage matches successfully scheduled with consecutive matches & prime daytime favored!")
+        output_lines.append("\nAll group stage and knockout matches successfully scheduled!")
+
+    final_output = "\n".join(output_lines)
+    print(final_output)
+    
+    with open("tournament_schedule.txt", "w", encoding="utf-8") as f:
+        f.write(final_output)
+        
+    print("\nSchedule has been successfully saved to 'tournament_schedule.txt'!")
 
 if __name__ == "__main__":
-    generate_schedule("teams_data.json")
+    generate_schedule()
