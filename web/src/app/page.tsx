@@ -164,18 +164,6 @@ export default function Home() {
           </div>
         </form>
       </div>
-
-      <footer className="relative z-10 mt-20 text-center text-xs text-muted/40 pb-4">
-        <a 
-          href="https://www.flaticon.com/free-icons/foot-ball" 
-          title="foot ball icons" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="hover:text-muted transition-colors"
-        >
-          Foot ball icons created by ranksol graphics - Flaticon
-        </a>
-      </footer>
     </main>
   );
 }
