@@ -29,7 +29,6 @@ def fetch_and_format_availability():
 
     # 2. Group availability by team and day
     team_id_to_name = {t['id']: t['team_name'] for t in teams_data}
-    team_id_to_captain = {t['id']: t['captain_name'] for t in teams_data}
     
     # Structure: dict[team_name] -> dict[day] -> list[time]
     organized_data = defaultdict(lambda: defaultdict(list))
@@ -39,32 +38,49 @@ def fetch_and_format_availability():
         if team_name:
             organized_data[team_name][a['day']].append(a['time'])
 
-    # 3. Format the output
-    days_order = {"Saturday": 1, "Sunday": 2, "Monday": 3, "Tuesday": 4, "Wednesday": 5, "Thursday": 6}
+    # 3. Format the output into a GRID
+    days_order = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"]
     
-    output_lines = []
-    output_lines.append("=========================================")
-    output_lines.append("       TEAM AVAILABILITY REPORT")
-    output_lines.append("=========================================\n")
-    
-    for team_id, team_name in team_id_to_name.items():
-        captain = team_id_to_captain.get(team_id, "Unknown")
-        output_lines.append(f" TEAM: {team_name} (Captain: {captain})")
+    # Determine column widths
+    col_widths = {"Team": 20}
+    for day in days_order:
+        col_widths[day] = len(day)
         
-        team_days = organized_data.get(team_name, {})
-        if not team_days:
-            output_lines.append("   [No availability submitted]")
-        else:
-            # Sort days chronologically
-            sorted_days = sorted(team_days.keys(), key=lambda d: days_order.get(d, 7))
-            
-            for day in sorted_days:
-                # Sort times chronologically
-                times = team_days[day]
+    # Calculate max width needed for each day based on the data
+    for team, days_data in organized_data.items():
+        col_widths["Team"] = max(col_widths["Team"], len(team) + 2)
+        for day in days_order:
+            times = days_data.get(day, [])
+            if times:
                 sorted_times = sorted(times, key=lambda t: int(t.split(':')[0]) * 60 + int(t.split(':')[1]))
-                output_lines.append(f"   - {day}: {', '.join(sorted_times)}")
-                
-        output_lines.append("-" * 40)
+                times_str = ", ".join(sorted_times)
+                col_widths[day] = max(col_widths[day], len(times_str) + 2)
+
+    output_lines = []
+    
+    # Create Header
+    header = f"{'Team'.ljust(col_widths['Team'])} | " + " | ".join(day.ljust(col_widths[day]) for day in days_order)
+    output_lines.append(header)
+    output_lines.append("-" * len(header))
+    
+    # Create Rows
+    for team_id, team_name in team_id_to_name.items():
+        team_days = organized_data.get(team_name, {})
+        
+        row_str = f"{team_name.ljust(col_widths['Team'])} | "
+        
+        day_strs = []
+        for day in days_order:
+            times = team_days.get(day, [])
+            if times:
+                sorted_times = sorted(times, key=lambda t: int(t.split(':')[0]) * 60 + int(t.split(':')[1]))
+                times_str = ", ".join(sorted_times)
+            else:
+                times_str = ""
+            day_strs.append(times_str.ljust(col_widths[day]))
+            
+        row_str += " | ".join(day_strs)
+        output_lines.append(row_str)
         
     final_output = "\n".join(output_lines)
     
@@ -73,7 +89,7 @@ def fetch_and_format_availability():
         f.write(final_output)
         
     print(final_output)
-    print("\n Report successfully saved to 'team_availability_report.txt'!")
+    print("\n[SUCCESS] Grid Report successfully saved to 'team_availability_report.txt'!")
 
 if __name__ == "__main__":
     fetch_and_format_availability()
