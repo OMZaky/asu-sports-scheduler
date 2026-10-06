@@ -123,7 +123,7 @@ export default function Home() {
                 value={teamName}
                 onChange={(e) => setTeamName(e.target.value)}
                 placeholder="e.g. The Invincibles"
-                className="w-full px-5 py-4 bg-secondary border border-border rounded-xl text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm"
+                className="w-full px-5 py-4 bg-secondary border border-border rounded-xl text-foreground placeholder:text-muted focus:outline-none focus:ring-4 focus:ring-primary/30 focus:border-primary hover:border-primary/50 hover:bg-secondary/80 hover:shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all duration-300 shadow-sm"
                 required
               />
             </div>
@@ -137,7 +137,7 @@ export default function Home() {
                 value={captainName}
                 onChange={(e) => setCaptainName(e.target.value)}
                 placeholder="e.g. Lionel Messi"
-                className="w-full px-5 py-4 bg-secondary border border-border rounded-xl text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm"
+                className="w-full px-5 py-4 bg-secondary border border-border rounded-xl text-foreground placeholder:text-muted focus:outline-none focus:ring-4 focus:ring-primary/30 focus:border-primary hover:border-primary/50 hover:bg-secondary/80 hover:shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all duration-300 shadow-sm"
                 required
               />
             </div>
