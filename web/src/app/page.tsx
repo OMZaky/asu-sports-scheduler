@@ -114,7 +114,7 @@ export default function Home() {
         <form onSubmit={handleSubmit} className="space-y-10">
           <div className="max-w-2xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-semibold text-foreground mb-2 ml-1" htmlFor="teamName">
+              <label className="block text-base font-bold text-foreground mb-2 ml-1 tracking-wide" htmlFor="teamName">
                 Team Name
               </label>
               <input
@@ -128,7 +128,7 @@ export default function Home() {
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-foreground mb-2 ml-1" htmlFor="captainName">
+              <label className="block text-base font-bold text-foreground mb-2 ml-1 tracking-wide" htmlFor="captainName">
                 Captain Name
               </label>
               <input
