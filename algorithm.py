@@ -94,6 +94,10 @@ def generate_schedule():
             time_mins = get_minutes(time_str)
             if 600 <= time_mins <= 1020:
                 bonus += 1
+                
+            # Extra bonus for 12:30 PM (750 minutes)
+            if time_mins == 750:
+                bonus += 5
 
             days_order = {"Saturday": 1, "Sunday": 2, "Monday": 3, "Tuesday": 4, "Wednesday": 5, "Thursday": 6}
             return (-bonus, days_order.get(day, 7), time_mins)
