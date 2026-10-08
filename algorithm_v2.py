@@ -12,9 +12,9 @@ from datetime import datetime, timedelta
 # ==========================================
 
 # 1. Exact Dates Mapping
-# Simply provide the start date of the tournament in YYYY-MM-DD format.
-# The algorithm will automatically calculate the exact calendar dates for the rest of the week!
-TOURNAMENT_START_DATE = "2026-11-07"
+# Provide the start date of the tournament in YYYY-MM-DD format (e.g., "2026-11-07")
+# Or set this to None to automatically calculate the upcoming Saturday!
+TOURNAMENT_START_DATE = None
 
 # 2. Lock Teams Together
 # Define lists of teams that MUST be in the same group.
@@ -291,7 +291,16 @@ def generate_schedule():
     
     # Generate Dynamic Date Mapping
     try:
-        start_date_obj = datetime.strptime(TOURNAMENT_START_DATE, "%Y-%m-%d")
+        if TOURNAMENT_START_DATE:
+            start_date_obj = datetime.strptime(TOURNAMENT_START_DATE, "%Y-%m-%d")
+        else:
+            today = datetime.today()
+            # 0=Monday, 5=Saturday. Find the upcoming Saturday.
+            days_ahead = 5 - today.weekday()
+            if days_ahead <= 0: # If today is Saturday or Sunday, get next week's Saturday
+                days_ahead += 7
+            start_date_obj = today + timedelta(days=days_ahead)
+            
         date_mapping = {}
         for day, order in days_order.items():
             # offset from Saturday (order=1) -> 0 days, Sunday (order=2) -> 1 day...
