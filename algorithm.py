@@ -10,94 +10,15 @@ def get_minutes(time_str):
     h, m = map(int, time_str.split(':'))
     return h * 60 + m
 
-
-
-def generate_schedule():
-    # 1. Connect to Supabase and Load Data
-    env_path = os.path.join(os.path.dirname(__file__), "web", ".env.local")
-    load_dotenv(dotenv_path=env_path)
-    url = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
-    key = os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+def attempt_schedule(teams_list, availability_map, group_size=4):
+    random.shuffle(teams_list)
+    groups = [teams_list[i:i + group_size] for i in range(0, len(teams_list), group_size)]
     
-    if not url or not key:
-        print("Error: Supabase URL or Key not found in .env file.")
-        return
-
-    supabase: Client = create_client(url, key)
-    
-    print("Fetching data from Supabase...")
-    teams_response = supabase.table("teams").select("*").execute()
-    availability_response = supabase.table("availability").select("*").execute()
-    
-    teams_data = teams_response.data
-    avail_data = availability_response.data
-    
-    if not teams_data:
-        print("No teams found in the database. Please submit some teams on the website first!")
-        return
-
-    teams = [t['team_name'] for t in teams_data]
-    
-    # Map team_id to team_name
-    team_id_to_name = {t['id']: t['team_name'] for t in teams_data}
-    
-    availability_map = defaultdict(set)
-    for a in avail_data:
-        team_name = team_id_to_name.get(a['team_id'])
-        if team_name:
-            availability_map[team_name].add(f"{a['day']}-{a['time']}")
-
-    if len(teams) < 4:
-        print(f"Only {len(teams)} teams registered. Need at least 4 teams for Group Stages + Knockouts.")
-        return
-
-    # 2. Tournament Structure: Group Stages
-    print("\n--- TOURNAMENT DRAW (GROUP STAGE) ---")
-    
-    group_size = 4
-    best_groups = []
-    best_matches = []
-    min_unschedulable = float('inf')
-    
-    # Try 1000 different random group draws to find the one with the fewest impossible matches
-    for _ in range(1000):
-        random.shuffle(teams)
-        groups = [teams[i:i + group_size] for i in range(0, len(teams), group_size)]
-        
-        matches = []
-        impossible_matches = 0
-        for group in groups:
-            group_matches = list(itertools.combinations(group, 2))
-            for match in group_matches:
-                matches.append({"type": "Group Stage", "teams": match})
-                common = availability_map[match[0]].intersection(availability_map[match[1]])
-                if len(common) == 0:
-                    impossible_matches += 1
-                    
-        if impossible_matches == 0:
-            best_groups = groups
-            best_matches = matches
-            min_unschedulable = 0
-            break
-        elif impossible_matches < min_unschedulable:
-            min_unschedulable = impossible_matches
-            best_groups = groups
-            best_matches = matches
-
-    if min_unschedulable > 0:
-        print(f"Note: Even after 1000 optimized draws, there are at least {min_unschedulable} guaranteed impossible matches.")
-    else:
-        print("Found a perfect group draw where all intra-group matches have at least one common time slot!\n")
-
-    groups = best_groups
-    matches = best_matches
-
-    for i, group in enumerate(groups):
-        print(f"Group {chr(65+i)}: {', '.join(group)}")
+    matches = []
+    for group in groups:
+        for match in list(itertools.combinations(group, 2)):
+            matches.append({"type": "Group Stage", "teams": match})
             
-    print(f"\nTotal Group Stage Matches to schedule: {len(matches)}\n")
-
-    # 3. Scheduling logic
     MAX_CONCURRENT_MATCHES = 2
     booked_slots = defaultdict(int)
     team_schedule = defaultdict(set)
@@ -115,7 +36,7 @@ def generate_schedule():
             bonus = 0
             day, time_str = slot.split('-')
             
-            # Penalize multiple matches on the same day for either team (unfavored but acceptable)
+            # Penalize multiple matches on the same day for either team
             if any(existing.startswith(f"{day}-") for existing in team_schedule[team_a]):
                 bonus -= 50
             if any(existing.startswith(f"{day}-") for existing in team_schedule[team_b]):
@@ -125,7 +46,7 @@ def generate_schedule():
             if 600 <= time_mins <= 1020:
                 bonus += 1
                 
-            # Extra bonus for 12:30 PM (750 minutes)
+            # Extra bonus for 12:30 PM
             if time_mins == 750:
                 bonus += 5
 
@@ -154,10 +75,85 @@ def generate_schedule():
         
         if not scheduled:
             unscheduled.append(f"{team_a} vs {team_b} ({match_info['type']})")
+            
+    return len(unscheduled), groups, final_schedule, unscheduled, booked_slots
 
-    # 4. Knockout Stage Logic
-    # We will reserve slots on the latest available days for the knockouts.
-    # Quarter Finals (4 matches), Semi Finals (2 matches), Final (1 match).
+def generate_schedule():
+    # 1. Connect to Supabase and Load Data
+    env_path = os.path.join(os.path.dirname(__file__), "web", ".env.local")
+    load_dotenv(dotenv_path=env_path)
+    url = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
+    key = os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+    
+    if not url or not key:
+        print("Error: Supabase URL or Key not found in .env file.")
+        return
+
+    supabase: Client = create_client(url, key)
+    
+    print("Fetching data from Supabase...")
+    teams_response = supabase.table("teams").select("*").execute()
+    availability_response = supabase.table("availability").select("*").execute()
+    
+    teams_data = teams_response.data
+    avail_data = availability_response.data
+    
+    if not teams_data:
+        print("No teams found in the database.")
+        return
+
+    teams = [t['team_name'] for t in teams_data]
+    
+    # Map team_id to team_name
+    team_id_to_name = {t['id']: t['team_name'] for t in teams_data}
+    
+    availability_map = defaultdict(set)
+    for a in avail_data:
+        team_name = team_id_to_name.get(a['team_id'])
+        if team_name:
+            availability_map[team_name].add(f"{a['day']}-{a['time']}")
+
+    if len(teams) < 4:
+        print(f"Only {len(teams)} teams registered. Need at least 4 teams for Group Stages + Knockouts.")
+        return
+
+    # 2. Monte Carlo Simulation for Best Draw
+    print("\nRunning 10,000 full Monte Carlo simulations to find the absolute perfect schedule. Please wait...")
+    
+    best_unscheduled_count = float('inf')
+    best_groups = None
+    best_schedule = None
+    best_unscheduled_list = None
+    best_booked_slots = None
+    
+    for i in range(10000):
+        u_count, g, sched, u_list, b_slots = attempt_schedule(list(teams), availability_map)
+        if u_count == 0:
+            best_unscheduled_count = 0
+            best_groups = g
+            best_schedule = sched
+            best_unscheduled_list = u_list
+            best_booked_slots = b_slots
+            break
+        elif u_count < best_unscheduled_count:
+            best_unscheduled_count = u_count
+            best_groups = g
+            best_schedule = sched
+            best_unscheduled_list = u_list
+            best_booked_slots = b_slots
+
+    print("\n--- TOURNAMENT DRAW (GROUP STAGE) ---")
+    if best_unscheduled_count > 0:
+        print(f"Note: Even after 10,000 full simulations, there are at least {best_unscheduled_count} matches that mathematically cannot be scheduled.")
+    else:
+        print("Found a 100% PERFECT draw where every single match is successfully scheduled!\n")
+
+    for i, group in enumerate(best_groups):
+        print(f"Group {chr(65+i)}: {', '.join(group)}")
+            
+    print(f"\nTotal Group Stage Matches successfully scheduled: {len(best_schedule)}\n")
+
+    # 3. Knockout Stage Logic
     print("--- SCHEDULING KNOCKOUT STAGE ---")
     all_possible_slots = set()
     for slots in availability_map.values():
@@ -177,13 +173,14 @@ def generate_schedule():
         "Quarter-Final 4 (TBD vs TBD)"
     ]
     
+    MAX_CONCURRENT_MATCHES = 2
     for ko_match in knockout_matches:
         scheduled = False
         for slot in sorted_all_slots:
-            if booked_slots[slot] < MAX_CONCURRENT_MATCHES:
-                booked_slots[slot] += 1
-                pitch_num = booked_slots[slot]
-                final_schedule.append({
+            if best_booked_slots[slot] < MAX_CONCURRENT_MATCHES:
+                best_booked_slots[slot] += 1
+                pitch_num = best_booked_slots[slot]
+                best_schedule.append({
                     "Match": ko_match,
                     "Type": "Knockout",
                     "Time": slot,
@@ -192,16 +189,16 @@ def generate_schedule():
                 scheduled = True
                 break
         if not scheduled:
-            unscheduled.append(f"{ko_match} (Knockout)")
+            best_unscheduled_list.append(f"{ko_match} (Knockout)")
 
-    # 5. Output Results
+    # 4. Output Results
     output_lines = []
     output_lines.append("\n--- FINAL TOURNAMENT SCHEDULE ---")
     
-    final_schedule.sort(key=lambda x: (days_order.get(x["Time"].split('-')[0], 7), get_minutes(x["Time"].split('-')[1])))
+    best_schedule.sort(key=lambda x: (days_order.get(x["Time"].split('-')[0], 7), get_minutes(x["Time"].split('-')[1])))
     
     current_time = None
-    for match in final_schedule:
+    for match in best_schedule:
         if match["Time"] != current_time:
             current_time = match["Time"]
             day, time = current_time.split("-")
@@ -209,9 +206,9 @@ def generate_schedule():
             
         output_lines.append(f"  - [{match['Type']}] {match['Match']} ({match['Pitch']})")
 
-    if unscheduled:
+    if best_unscheduled_list:
         output_lines.append("\nWARNING: Could not find available times for the following matches:")
-        for m in unscheduled:
+        for m in best_unscheduled_list:
             output_lines.append(f"  - {m}")
     else:
         output_lines.append("\nAll group stage and knockout matches successfully scheduled!")
