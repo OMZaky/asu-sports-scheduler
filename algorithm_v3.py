@@ -269,9 +269,23 @@ def generate_schedule(num_weeks, output_filename):
             w_str, day, time_str = slot.split('-')
             day_key = f"{w_str}-{day}"
             
-            # Constraint: Matches must not be later than 16:30 (990 minutes)
-            if get_minutes(time_str) > 990:
+            # Constraint: Knockout matches MUST be exactly at 12:00
+            if time_str != "12:00":
                 continue
+                
+            # Constraint: Must be AFTER opening match
+            if OPENING_MATCH:
+                om_week = 1
+                om_day_order = days_order.get(OPENING_MATCH['day'], 7)
+                om_time = get_minutes(OPENING_MATCH['time'])
+                
+                week_num = int(w_str[1:])
+                d_ord = days_order.get(day, 7)
+                t_mins = get_minutes(time_str)
+                
+                if week_num < om_week: continue
+                if week_num == om_week and d_ord < om_day_order: continue
+                if week_num == om_week and d_ord == om_day_order and t_mins <= om_time: continue
             
             if best_matches_per_day[day_key] >= MAX_MATCHES_PER_DAY:
                 continue
