@@ -53,17 +53,47 @@ def generate_schedule():
 
     # 2. Tournament Structure: Group Stages
     print("\n--- TOURNAMENT DRAW (GROUP STAGE) ---")
-    random.shuffle(teams)
     
     group_size = 4
-    groups = [teams[i:i + group_size] for i in range(0, len(teams), group_size)]
+    best_groups = []
+    best_matches = []
+    min_unschedulable = float('inf')
     
-    matches = []
+    # Try 1000 different random group draws to find the one with the fewest impossible matches
+    for _ in range(1000):
+        random.shuffle(teams)
+        groups = [teams[i:i + group_size] for i in range(0, len(teams), group_size)]
+        
+        matches = []
+        impossible_matches = 0
+        for group in groups:
+            group_matches = list(itertools.combinations(group, 2))
+            for match in group_matches:
+                matches.append({"type": "Group Stage", "teams": match})
+                common = availability_map[match[0]].intersection(availability_map[match[1]])
+                if len(common) == 0:
+                    impossible_matches += 1
+                    
+        if impossible_matches == 0:
+            best_groups = groups
+            best_matches = matches
+            min_unschedulable = 0
+            break
+        elif impossible_matches < min_unschedulable:
+            min_unschedulable = impossible_matches
+            best_groups = groups
+            best_matches = matches
+
+    if min_unschedulable > 0:
+        print(f"Note: Even after 1000 optimized draws, there are at least {min_unschedulable} guaranteed impossible matches.")
+    else:
+        print("Found a perfect group draw where all intra-group matches have at least one common time slot!\n")
+
+    groups = best_groups
+    matches = best_matches
+
     for i, group in enumerate(groups):
         print(f"Group {chr(65+i)}: {', '.join(group)}")
-        group_matches = list(itertools.combinations(group, 2))
-        for match in group_matches:
-            matches.append({"type": "Group Stage", "teams": match})
             
     print(f"\nTotal Group Stage Matches to schedule: {len(matches)}\n")
 
