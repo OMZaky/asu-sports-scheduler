@@ -46,8 +46,8 @@ def attempt_schedule(teams_list, availability_map, group_size=4):
             if 600 <= time_mins <= 1020:
                 bonus += 1
                 
-            # Extra bonus for 12:30 PM
-            if time_mins == 750:
+            # Extra bonus for 12:00 PM
+            if time_mins == 720:
                 bonus += 5
 
             days_order = {"Saturday": 1, "Sunday": 2, "Monday": 3, "Tuesday": 4, "Wednesday": 5, "Thursday": 6}
