@@ -26,7 +26,8 @@ LOCKED_GROUPS = [
 # 3. Opening Match Configuration
 # Force a specific match to happen at an exact day/time.
 # The algorithm will automatically ensure they are in the same group.
-# Set to None if you don't want a forced opening match.
+# NOTE: The "day" you specify here (e.g., "Saturday") will automatically be linked 
+# to your TOURNAMENT_START_DATE above!
 OPENING_MATCH = {
     "team_a": "Under CTRL ",
     "team_b": "Eldido",
