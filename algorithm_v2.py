@@ -18,9 +18,14 @@ TOURNAMENT_START_DATE = None
 
 # 2. Lock Teams Together
 # Define lists of teams that MUST be in the same group.
+# Example: ["Eldido", "Wax"],
+# Example: ["Royal house", "Mazareeta fc"]
+
 LOCKED_GROUPS = [
-    # Example: ["Eldido", "Wax"],
-    # Example: ["Royal house", "Mazareeta fc"]
+    ["Under CTRL ", "Nezam eltayebat", "khaly w sohabo", "3azema"],
+    ["Last dance"],
+    ["El hagamin ", "Royal house"],
+    ["3 sayma"]
 ]
 
 # 3. Opening Match Configuration
@@ -30,8 +35,8 @@ LOCKED_GROUPS = [
 # to your TOURNAMENT_START_DATE above!
 OPENING_MATCH = {
     "team_a": "Under CTRL ",
-    "team_b": "Eldido",
-    "day": "Saturday",
+    "team_b": "khaly w sohabo",
+    "day": "Sunday",
     "time": "12:00"
 }
 # OPENING_MATCH = None
@@ -276,6 +281,12 @@ def generate_schedule():
     # 4. Output Results
     output_lines = []
     
+    if best_unscheduled_count > 0:
+        output_lines.append(f"Note: Still {best_unscheduled_count} impossible matches.")
+    else:
+        output_lines.append("Found a 100% PERFECT Group Stage draw!")
+        
+    output_lines.append(f"Knockout Clash Risk Score: {best_risk_score}\n")
     output_lines.append("--- TOURNAMENT GROUPS ---")
     for i, group in enumerate(best_groups):
         output_lines.append(f"Group {chr(65+i)}: {', '.join(group)}")
