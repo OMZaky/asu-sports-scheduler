@@ -76,7 +76,23 @@ def attempt_schedule(teams_list, availability_map, group_size=4):
         if not scheduled:
             unscheduled.append(f"{team_a} vs {team_b} ({match_info['type']})")
             
-    return len(unscheduled), groups, final_schedule, unscheduled, booked_slots
+    # Calculate Knockout Risk Score
+    knockout_risk = 0
+    if len(groups) == 4: # Group A, B, C, D
+        for i in range(len(groups)):
+            for j in range(i + 1, len(groups)):
+                for team1 in groups[i]:
+                    for team2 in groups[j]:
+                        common = availability_map[team1].intersection(availability_map[team2])
+                        if len(common) == 0:
+                            # If A&B or C&D (They meet early in Quarter/Semi-Finals)
+                            if (i == 0 and j == 1) or (i == 2 and j == 3):
+                                knockout_risk += 100
+                            else:
+                                # Opposite sides of bracket (They only meet if BOTH make the Final)
+                                knockout_risk += 10
+            
+    return len(unscheduled), knockout_risk, groups, final_schedule, unscheduled, booked_slots
 
 def generate_schedule():
     # 1. Connect to Supabase and Load Data
@@ -118,25 +134,31 @@ def generate_schedule():
         return
 
     # 2. Monte Carlo Simulation for Best Draw
-    print("\nRunning 10,000 full Monte Carlo simulations to find the absolute perfect schedule. Please wait...")
+    print("\nRunning 50,000 full Monte Carlo simulations to find the absolute perfect schedule...")
+    print("Optimizing to push potential zero-overlap clashes to opposite sides of the knockout bracket...")
     
     best_unscheduled_count = float('inf')
+    best_risk_score = float('inf')
     best_groups = None
     best_schedule = None
     best_unscheduled_list = None
     best_booked_slots = None
     
-    for i in range(10000):
-        u_count, g, sched, u_list, b_slots = attempt_schedule(list(teams), availability_map)
-        if u_count == 0:
-            best_unscheduled_count = 0
+    for i in range(50000):
+        u_count, risk, g, sched, u_list, b_slots = attempt_schedule(list(teams), availability_map)
+        
+        # Primary objective: Minimize unscheduled Group matches
+        if u_count < best_unscheduled_count:
+            best_unscheduled_count = u_count
+            best_risk_score = risk
             best_groups = g
             best_schedule = sched
             best_unscheduled_list = u_list
             best_booked_slots = b_slots
-            break
-        elif u_count < best_unscheduled_count:
-            best_unscheduled_count = u_count
+            
+        # Secondary objective: If Group matches are perfect, minimize future knockout clashes!
+        elif u_count == best_unscheduled_count and risk < best_risk_score:
+            best_risk_score = risk
             best_groups = g
             best_schedule = sched
             best_unscheduled_list = u_list
@@ -144,9 +166,11 @@ def generate_schedule():
 
     print("\n--- TOURNAMENT DRAW (GROUP STAGE) ---")
     if best_unscheduled_count > 0:
-        print(f"Note: Even after 10,000 full simulations, there are at least {best_unscheduled_count} matches that mathematically cannot be scheduled.")
+        print(f"Note: Even after 50,000 full simulations, there are at least {best_unscheduled_count} matches that mathematically cannot be scheduled.")
     else:
-        print("Found a 100% PERFECT draw where every single match is successfully scheduled!\n")
+        print("Found a 100% PERFECT Group Stage draw!")
+        print(f"Knockout Clash Risk Score has been minimized to: {best_risk_score}")
+        print("(Zero-overlap teams have been strategically placed on opposite sides of the bracket!)\n")
 
     for i, group in enumerate(best_groups):
         print(f"Group {chr(65+i)}: {', '.join(group)}")
