@@ -295,19 +295,28 @@ def generate_schedule():
             start_date_obj = datetime.strptime(TOURNAMENT_START_DATE, "%Y-%m-%d")
         else:
             today = datetime.today()
-            # 0=Monday, 5=Saturday. Find the upcoming Saturday.
-            days_ahead = 5 - today.weekday()
-            if days_ahead <= 0: # If today is Saturday or Sunday, get next week's Saturday
+            target_day_name = OPENING_MATCH["day"] if OPENING_MATCH else "Saturday"
+            
+            weekday_map = {"Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6}
+            target_weekday = weekday_map[target_day_name]
+            
+            days_ahead = target_weekday - today.weekday()
+            if days_ahead <= 0:
                 days_ahead += 7
-            start_date_obj = today + timedelta(days=days_ahead)
+                
+            target_date_obj = today + timedelta(days=days_ahead)
+            
+            # Since target_date_obj is for target_day_name, we must shift it back 
+            # to find the logical "Saturday" start date
+            offset = days_order[target_day_name] - 1
+            start_date_obj = target_date_obj - timedelta(days=offset)
             
         date_mapping = {}
         for day, order in days_order.items():
-            # offset from Saturday (order=1) -> 0 days, Sunday (order=2) -> 1 day...
             day_date = start_date_obj + timedelta(days=order - 1)
             date_mapping[day] = day_date.strftime("%b %d, %Y")
     except Exception as e:
-        print("Warning: Could not parse TOURNAMENT_START_DATE. Ensure it is YYYY-MM-DD.")
+        print("Warning: Could not parse dates.")
         date_mapping = {}
     
     current_time = None
