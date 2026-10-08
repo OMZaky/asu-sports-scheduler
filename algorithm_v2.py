@@ -5,19 +5,16 @@ import random
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
+from datetime import datetime, timedelta
+
 # ==========================================
 # --- TOURNAMENT CONFIGURATION (V2) ---
 # ==========================================
 
 # 1. Exact Dates Mapping
-DATE_MAPPING = {
-    "Saturday": "Nov 7, 2026",
-    "Sunday": "Nov 8, 2026",
-    "Monday": "Nov 9, 2026",
-    "Tuesday": "Nov 10, 2026",
-    "Wednesday": "Nov 11, 2026",
-    "Thursday": "Nov 12, 2026"
-}
+# Simply provide the start date of the tournament in YYYY-MM-DD format.
+# The algorithm will automatically calculate the exact calendar dates for the rest of the week!
+TOURNAMENT_START_DATE = "2026-11-07"
 
 # 2. Lock Teams Together
 # Define lists of teams that MUST be in the same group.
@@ -291,12 +288,24 @@ def generate_schedule():
         0 if "OPENING MATCH" in x["Type"] else 1
     ))
     
+    # Generate Dynamic Date Mapping
+    try:
+        start_date_obj = datetime.strptime(TOURNAMENT_START_DATE, "%Y-%m-%d")
+        date_mapping = {}
+        for day, order in days_order.items():
+            # offset from Saturday (order=1) -> 0 days, Sunday (order=2) -> 1 day...
+            day_date = start_date_obj + timedelta(days=order - 1)
+            date_mapping[day] = day_date.strftime("%b %d, %Y")
+    except Exception as e:
+        print("Warning: Could not parse TOURNAMENT_START_DATE. Ensure it is YYYY-MM-DD.")
+        date_mapping = {}
+    
     current_time = None
     for match in best_schedule:
         if match["Time"] != current_time:
             current_time = match["Time"]
             day, time = current_time.split("-")
-            exact_date = DATE_MAPPING.get(day, "Unknown Date")
+            exact_date = date_mapping.get(day, "Unknown Date")
             output_lines.append(f"\n[ {day}, {exact_date} at {time} ]")
             
         output_lines.append(f"  - [{match['Type']}] {match['Match']} ({match['Pitch']})")
