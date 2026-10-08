@@ -142,6 +142,10 @@ def attempt_schedule(teams_list, availability_map, locked_groups, opening_match,
                 if week_num == om_week and d_ord < om_day_order: continue
                 if week_num == om_week and d_ord == om_day_order and t_mins <= om_time: continue
 
+            # Constraint: Matches must not be later than 16:30 (990 minutes)
+            if t_mins > 990:
+                continue
+
             # Constraint 2: Max matches per day
             if matches_per_day[day_key] >= MAX_MATCHES_PER_DAY:
                 continue
@@ -264,6 +268,10 @@ def generate_schedule(num_weeks, output_filename):
         for slot in sorted_all_slots:
             w_str, day, time_str = slot.split('-')
             day_key = f"{w_str}-{day}"
+            
+            # Constraint: Matches must not be later than 16:30 (990 minutes)
+            if get_minutes(time_str) > 990:
+                continue
             
             if best_matches_per_day[day_key] >= MAX_MATCHES_PER_DAY:
                 continue
