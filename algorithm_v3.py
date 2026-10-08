@@ -269,9 +269,13 @@ def generate_schedule(num_weeks, output_filename):
             w_str, day, time_str = slot.split('-')
             day_key = f"{w_str}-{day}"
             
-            # Constraint: Knockout matches MUST be exactly at 12:00
-            if time_str != "12:00":
-                continue
+            # Constraint: Knockout matches MUST be exactly at 12:00 (Only for 3 week schedule)
+            if num_weeks == 3:
+                if time_str != "12:00":
+                    continue
+            else:
+                if get_minutes(time_str) > 990:
+                    continue
                 
             # Constraint: Must be AFTER opening match
             if OPENING_MATCH:

@@ -3,9 +3,9 @@ Knockout Clash Risk Score: 140
 
 --- TOURNAMENT GROUPS ---
 Group A: Under CTRL , Nezam eltayebat, khaly w sohabo, 3azema
-Group B: Last dance, Ya Sater FC, Eldido, el katayef wel latayef
-Group C: El hagamin , Royal house, Mazareeta fc, Flamengo
-Group D: 3 sayma, Wax, nozha, Antesh
+Group B: Last dance, Wax, nozha, Eldido
+Group C: El hagamin , Royal house, Flamengo, Mazareeta fc
+Group D: 3 sayma, Ya Sater FC, Antesh, el katayef wel latayef
 
 --- FINAL TOURNAMENT SCHEDULE ---
 
@@ -13,30 +13,23 @@ Group D: 3 sayma, Wax, nozha, Antesh
   - [Group Stage (OPENING MATCH)] Under CTRL  vs khaly w sohabo (Pitch 1)
 
 [ W1 - Sunday, Oct 11, 2026 at 13:00 ]
-  - [Group Stage] 3 sayma vs Wax (Pitch 1)
+  - [Group Stage] Last dance vs Wax (Pitch 1)
 
 [ W1 - Sunday, Oct 11, 2026 at 13:30 ]
   - [Group Stage] Nezam eltayebat vs 3azema (Pitch 1)
 
 [ W1 - Sunday, Oct 11, 2026 at 14:30 ]
-  - [Group Stage] Last dance vs Ya Sater FC (Pitch 1)
+  - [Group Stage] Ya Sater FC vs Antesh (Pitch 1)
 
 [ W1 - Monday, Oct 12, 2026 at 12:00 ]
-  - [Knockout] Quarter-Final 1 (TBD vs TBD) (Pitch 1)
-  - [Knockout] Quarter-Final 2 (TBD vs TBD) (Pitch 2)
+  - [Group Stage] nozha vs Eldido (Pitch 1)
 
 [ W1 - Tuesday, Oct 13, 2026 at 12:00 ]
-  - [Group Stage] Last dance vs Eldido (Pitch 1)
-  - [Group Stage] khaly w sohabo vs 3azema (Pitch 2)
-
-[ W1 - Tuesday, Oct 13, 2026 at 16:00 ]
-  - [Group Stage] Wax vs nozha (Pitch 1)
-
-[ W1 - Tuesday, Oct 13, 2026 at 16:30 ]
-  - [Group Stage] Ya Sater FC vs el katayef wel latayef (Pitch 1)
+  - [Group Stage] Last dance vs nozha (Pitch 1)
+  - [Group Stage] 3 sayma vs Ya Sater FC (Pitch 2)
 
 [ W1 - Wednesday, Oct 14, 2026 at 11:00 ]
-  - [Group Stage] Mazareeta fc vs Flamengo (Pitch 1)
+  - [Group Stage] Flamengo vs Mazareeta fc (Pitch 1)
 
 [ W1 - Wednesday, Oct 14, 2026 at 12:00 ]
   - [Group Stage] El hagamin  vs Royal house (Pitch 1)
@@ -46,36 +39,49 @@ Group D: 3 sayma, Wax, nozha, Antesh
   - [Group Stage] Nezam eltayebat vs khaly w sohabo (Pitch 1)
 
 [ W1 - Thursday, Oct 15, 2026 at 12:00 ]
-  - [Group Stage] nozha vs Antesh (Pitch 1)
-  - [Group Stage] El hagamin  vs Mazareeta fc (Pitch 2)
+  - [Group Stage] El hagamin  vs Mazareeta fc (Pitch 1)
 
 [ W2 - Saturday, Oct 17, 2026 at 12:00 ]
   - [Group Stage] Royal house vs Flamengo (Pitch 1)
-  - [Group Stage] Under CTRL  vs Nezam eltayebat (Pitch 2)
+  - [Group Stage] khaly w sohabo vs 3azema (Pitch 2)
 
 [ W2 - Sunday, Oct 18, 2026 at 12:00 ]
-  - [Group Stage] Wax vs Antesh (Pitch 1)
-  - [Group Stage] Last dance vs el katayef wel latayef (Pitch 2)
+  - [Group Stage] Wax vs Eldido (Pitch 1)
+  - [Group Stage] 3 sayma vs el katayef wel latayef (Pitch 2)
 
-[ W2 - Sunday, Oct 18, 2026 at 12:30 ]
-  - [Group Stage] Under CTRL  vs 3azema (Pitch 1)
+[ W2 - Sunday, Oct 18, 2026 at 13:30 ]
+  - [Group Stage] Under CTRL  vs Nezam eltayebat (Pitch 1)
 
-[ W2 - Monday, Oct 19, 2026 at 12:00 ]
-  - [Knockout] Semi-Final 1 (TBD vs TBD) (Pitch 1)
-  - [Knockout] Semi-Final 2 (TBD vs TBD) (Pitch 2)
+[ W2 - Monday, Oct 19, 2026 at 16:30 ]
+  - [Knockout] Quarter-Final 3 (TBD vs TBD) (Pitch 1)
+  - [Knockout] Quarter-Final 4 (TBD vs TBD) (Pitch 2)
 
 [ W2 - Tuesday, Oct 20, 2026 at 12:00 ]
-  - [Group Stage] Ya Sater FC vs Eldido (Pitch 1)
-  - [Group Stage] 3 sayma vs nozha (Pitch 2)
+  - [Group Stage] Last dance vs Eldido (Pitch 1)
+  - [Group Stage] Under CTRL  vs 3azema (Pitch 2)
+
+[ W2 - Tuesday, Oct 20, 2026 at 16:00 ]
+  - [Group Stage] Wax vs nozha (Pitch 1)
+
+[ W2 - Tuesday, Oct 20, 2026 at 16:30 ]
+  - [Group Stage] Ya Sater FC vs el katayef wel latayef (Pitch 1)
 
 [ W2 - Wednesday, Oct 21, 2026 at 12:00 ]
   - [Group Stage] El hagamin  vs Flamengo (Pitch 1)
-  - [Group Stage] Eldido vs el katayef wel latayef (Pitch 2)
+  - [Group Stage] Antesh vs el katayef wel latayef (Pitch 2)
+
+[ W2 - Wednesday, Oct 21, 2026 at 16:30 ]
+  - [Knockout] Quarter-Final 1 (TBD vs TBD) (Pitch 1)
+  - [Knockout] Quarter-Final 2 (TBD vs TBD) (Pitch 2)
 
 [ W2 - Thursday, Oct 22, 2026 at 12:00 ]
   - [Group Stage] Royal house vs Mazareeta fc (Pitch 1)
-  - [Knockout] Final (TBD vs TBD) (Pitch 2)
 
-WARNING: Could not schedule:
-  - Quarter-Final 3 (TBD vs TBD) (Knockout)
-  - Quarter-Final 4 (TBD vs TBD) (Knockout)
+[ W2 - Thursday, Oct 22, 2026 at 16:00 ]
+  - [Knockout] Semi-Final 2 (TBD vs TBD) (Pitch 1)
+
+[ W2 - Thursday, Oct 22, 2026 at 16:30 ]
+  - [Knockout] Final (TBD vs TBD) (Pitch 1)
+  - [Knockout] Semi-Final 1 (TBD vs TBD) (Pitch 2)
+
+All matches successfully scheduled!
