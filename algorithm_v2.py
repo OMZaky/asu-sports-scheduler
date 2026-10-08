@@ -5,15 +5,69 @@ import random
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
+# ==========================================
+# --- TOURNAMENT CONFIGURATION (V2) ---
+# ==========================================
+
+# 1. Exact Dates Mapping
+DATE_MAPPING = {
+    "Saturday": "Nov 7, 2026",
+    "Sunday": "Nov 8, 2026",
+    "Monday": "Nov 9, 2026",
+    "Tuesday": "Nov 10, 2026",
+    "Wednesday": "Nov 11, 2026",
+    "Thursday": "Nov 12, 2026"
+}
+
+# 2. Lock Teams Together
+# Define lists of teams that MUST be in the same group.
+LOCKED_GROUPS = [
+    # Example: ["Eldido", "Wax"],
+    # Example: ["Royal house", "Mazareeta fc"]
+]
+
+# 3. Opening Match Configuration
+# Force a specific match to happen at an exact day/time.
+# The algorithm will automatically ensure they are in the same group.
+# Set to None if you don't want a forced opening match.
+OPENING_MATCH = {
+    "team_a": "Under CTRL ",
+    "team_b": "Eldido",
+    "day": "Saturday",
+    "time": "12:00"
+}
+# OPENING_MATCH = None
+
+# ==========================================
+
 def get_minutes(time_str):
     """Convert HH:MM to minutes from midnight."""
     h, m = map(int, time_str.split(':'))
     return h * 60 + m
 
-def attempt_schedule(teams_list, availability_map, group_size=4):
-    random.shuffle(teams_list)
-    groups = [teams_list[i:i + group_size] for i in range(0, len(teams_list), group_size)]
+def attempt_schedule(teams_list, availability_map, locked_groups, opening_match, group_size=4):
+    groups = [[] for _ in range(4)]
+    available_teams = list(teams_list)
     
+    # Combine user locks + opening match lock
+    locks = list(locked_groups)
+    if opening_match:
+        locks.append([opening_match["team_a"], opening_match["team_b"]])
+        
+    # Place locked teams safely
+    for i, locked in enumerate(locks):
+        target_group = groups[i % 4]
+        for team in locked:
+            if team in available_teams and len(target_group) < group_size:
+                target_group.append(team)
+                available_teams.remove(team)
+                
+    # Fill remaining spots randomly
+    random.shuffle(available_teams)
+    for group in groups:
+        while len(group) < group_size and available_teams:
+            group.append(available_teams.pop())
+            
     matches = []
     for group in groups:
         for match in list(itertools.combinations(group, 2)):
@@ -24,8 +78,33 @@ def attempt_schedule(teams_list, availability_map, group_size=4):
     team_schedule = defaultdict(set)
     final_schedule = []
     unscheduled = []
+    
+    # Process Opening Match explicitly
+    if opening_match:
+        om_slot = f"{opening_match['day']}-{opening_match['time']}"
+        t_a = opening_match["team_a"]
+        t_b = opening_match["team_b"]
+        
+        match_to_remove = None
+        for m in matches:
+            if (m["teams"][0] == t_a and m["teams"][1] == t_b) or (m["teams"][0] == t_b and m["teams"][1] == t_a):
+                match_to_remove = m
+                break
+                
+        if match_to_remove:
+            matches.remove(match_to_remove)
+            booked_slots[om_slot] += 1
+            team_schedule[t_a].add(om_slot)
+            team_schedule[t_b].add(om_slot)
+            
+            final_schedule.append({
+                "Match": f"{t_a} vs {t_b}",
+                "Type": "Group Stage (OPENING MATCH)",
+                "Time": om_slot,
+                "Pitch": f"Pitch {booked_slots[om_slot]}"
+            })
 
-    # Sort matches by the LEAST number of common slots (hardest to schedule first)
+    # Sort remaining matches by the LEAST number of common slots
     matches.sort(key=lambda m: len(availability_map[m["teams"][0]].intersection(availability_map[m["teams"][1]])))
 
     for match_info in matches:
@@ -36,7 +115,6 @@ def attempt_schedule(teams_list, availability_map, group_size=4):
             bonus = 0
             day, time_str = slot.split('-')
             
-            # Penalize multiple matches on the same day for either team
             if any(existing.startswith(f"{day}-") for existing in team_schedule[team_a]):
                 bonus -= 50
             if any(existing.startswith(f"{day}-") for existing in team_schedule[team_b]):
@@ -78,31 +156,28 @@ def attempt_schedule(teams_list, availability_map, group_size=4):
             
     # Calculate Knockout Risk Score
     knockout_risk = 0
-    if len(groups) == 4: # Group A, B, C, D
+    if len(groups) == 4:
         for i in range(len(groups)):
             for j in range(i + 1, len(groups)):
                 for team1 in groups[i]:
                     for team2 in groups[j]:
                         common = availability_map[team1].intersection(availability_map[team2])
                         if len(common) == 0:
-                            # If A&B or C&D (They meet early in Quarter/Semi-Finals)
                             if (i == 0 and j == 1) or (i == 2 and j == 3):
                                 knockout_risk += 100
                             else:
-                                # Opposite sides of bracket (They only meet if BOTH make the Final)
                                 knockout_risk += 10
             
     return len(unscheduled), knockout_risk, groups, final_schedule, unscheduled, booked_slots
 
 def generate_schedule():
-    # 1. Connect to Supabase and Load Data
     env_path = os.path.join(os.path.dirname(__file__), "web", ".env.local")
     load_dotenv(dotenv_path=env_path)
     url = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
     key = os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
     
     if not url or not key:
-        print("Error: Supabase URL or Key not found in .env file.")
+        print("Error: Supabase credentials not found.")
         return
 
     supabase: Client = create_client(url, key)
@@ -115,12 +190,10 @@ def generate_schedule():
     avail_data = availability_response.data
     
     if not teams_data:
-        print("No teams found in the database.")
+        print("No teams found.")
         return
 
     teams = [t['team_name'] for t in teams_data]
-    
-    # Map team_id to team_name
     team_id_to_name = {t['id']: t['team_name'] for t in teams_data}
     
     availability_map = defaultdict(set)
@@ -130,12 +203,10 @@ def generate_schedule():
             availability_map[team_name].add(f"{a['day']}-{a['time']}")
 
     if len(teams) < 4:
-        print(f"Only {len(teams)} teams registered. Need at least 4 teams for Group Stages + Knockouts.")
+        print("Need at least 4 teams.")
         return
 
-    # 2. Monte Carlo Simulation for Best Draw
-    print("\nRunning 50,000 full Monte Carlo simulations to find the absolute perfect schedule...")
-    print("Optimizing to push potential zero-overlap clashes to opposite sides of the knockout bracket...")
+    print("\nRunning 50,000 full Monte Carlo simulations (V2) with user constraints...")
     
     best_unscheduled_count = float('inf')
     best_risk_score = float('inf')
@@ -145,9 +216,8 @@ def generate_schedule():
     best_booked_slots = None
     
     for i in range(50000):
-        u_count, risk, g, sched, u_list, b_slots = attempt_schedule(list(teams), availability_map)
+        u_count, risk, g, sched, u_list, b_slots = attempt_schedule(list(teams), availability_map, LOCKED_GROUPS, OPENING_MATCH)
         
-        # Primary objective: Minimize unscheduled Group matches
         if u_count < best_unscheduled_count:
             best_unscheduled_count = u_count
             best_risk_score = risk
@@ -156,7 +226,6 @@ def generate_schedule():
             best_unscheduled_list = u_list
             best_booked_slots = b_slots
             
-        # Secondary objective: If Group matches are perfect, minimize future knockout clashes!
         elif u_count == best_unscheduled_count and risk < best_risk_score:
             best_risk_score = risk
             best_groups = g
@@ -166,24 +235,15 @@ def generate_schedule():
 
     print("\n--- TOURNAMENT DRAW (GROUP STAGE) ---")
     if best_unscheduled_count > 0:
-        print(f"Note: Even after 50,000 full simulations, there are at least {best_unscheduled_count} matches that mathematically cannot be scheduled.")
+        print(f"Note: Still {best_unscheduled_count} impossible matches.")
     else:
         print("Found a 100% PERFECT Group Stage draw!")
-        print(f"Knockout Clash Risk Score has been minimized to: {best_risk_score}")
-        print("(Zero-overlap teams have been strategically placed on opposite sides of the bracket!)\n")
-
-    for i, group in enumerate(best_groups):
-        print(f"Group {chr(65+i)}: {', '.join(group)}")
-            
-    print(f"\nTotal Group Stage Matches successfully scheduled: {len(best_schedule)}\n")
 
     # 3. Knockout Stage Logic
-    print("--- SCHEDULING KNOCKOUT STAGE ---")
     all_possible_slots = set()
     for slots in availability_map.values():
         all_possible_slots.update(slots)
         
-    # Sort all slots chronologically so we can pick the LATEST ones for knockouts
     days_order = {"Saturday": 1, "Sunday": 2, "Monday": 3, "Tuesday": 4, "Wednesday": 5, "Thursday": 6}
     sorted_all_slots = sorted(list(all_possible_slots), key=lambda x: (days_order.get(x.split('-')[0], 7), get_minutes(x.split('-')[1])), reverse=True)
     
@@ -224,31 +284,37 @@ def generate_schedule():
         
     output_lines.append("\n--- FINAL TOURNAMENT SCHEDULE ---")
     
-    best_schedule.sort(key=lambda x: (days_order.get(x["Time"].split('-')[0], 7), get_minutes(x["Time"].split('-')[1])))
+    # Sort primarily by Day/Time, but ensure Opening Match is first on its day
+    best_schedule.sort(key=lambda x: (
+        days_order.get(x["Time"].split('-')[0], 7), 
+        get_minutes(x["Time"].split('-')[1]),
+        0 if "OPENING MATCH" in x["Type"] else 1
+    ))
     
     current_time = None
     for match in best_schedule:
         if match["Time"] != current_time:
             current_time = match["Time"]
             day, time = current_time.split("-")
-            output_lines.append(f"\n[ {day} at {time} ]")
+            exact_date = DATE_MAPPING.get(day, "Unknown Date")
+            output_lines.append(f"\n[ {day}, {exact_date} at {time} ]")
             
         output_lines.append(f"  - [{match['Type']}] {match['Match']} ({match['Pitch']})")
 
     if best_unscheduled_list:
-        output_lines.append("\nWARNING: Could not find available times for the following matches:")
+        output_lines.append("\nWARNING: Could not schedule:")
         for m in best_unscheduled_list:
             output_lines.append(f"  - {m}")
     else:
-        output_lines.append("\nAll group stage and knockout matches successfully scheduled!")
+        output_lines.append("\nAll matches successfully scheduled!")
 
     final_output = "\n".join(output_lines)
     print(final_output)
     
-    with open("tournament_schedule.txt", "w", encoding="utf-8") as f:
+    with open("tournament_schedule_v2.txt", "w", encoding="utf-8") as f:
         f.write(final_output)
         
-    print("\nSchedule has been successfully saved to 'tournament_schedule.txt'!")
+    print("\nSchedule saved to 'tournament_schedule_v2.txt'!")
 
 if __name__ == "__main__":
     generate_schedule()
