@@ -217,6 +217,11 @@ def generate_schedule():
 
     # 4. Output Results
     output_lines = []
+    
+    output_lines.append("--- TOURNAMENT GROUPS ---")
+    for i, group in enumerate(best_groups):
+        output_lines.append(f"Group {chr(65+i)}: {', '.join(group)}")
+        
     output_lines.append("\n--- FINAL TOURNAMENT SCHEDULE ---")
     
     best_schedule.sort(key=lambda x: (days_order.get(x["Time"].split('-')[0], 7), get_minutes(x["Time"].split('-')[1])))
