@@ -14,9 +14,9 @@ TOURNAMENT_START_DATE = None
 
 LOCKED_GROUPS = [
     ["Under CTRL ", "Nezam eltayebat", "khaly w sohabo", "3azema"],
-    ["Last dance"],
+    ["3 sayma"],
     ["El hagamin ", "Royal house"],
-    ["3 sayma"]
+    ["Last dance"]
 ]
 
 OPENING_MATCH = {
@@ -210,7 +210,7 @@ def generate_schedule(num_weeks, output_filename):
             for w in range(1, num_weeks + 1):
                 availability_map[team_name].add(f"W{w}-{a['day']}-{a['time']}")
 
-    print(f"\nRunning 10,000 Monte Carlo simulations for {num_weeks} WEEKS...")
+    print(f"\nRunning 50,000 Monte Carlo simulations for {num_weeks} WEEKS...")
     
     best_unscheduled_count = float('inf')
     best_risk_score = float('inf')
@@ -220,7 +220,7 @@ def generate_schedule(num_weeks, output_filename):
     best_booked_slots = None
     best_matches_per_day = None
     
-    for i in range(10000):
+    for i in range(50000):
         u_count, risk, g, sched, u_list, b_slots, mpd = attempt_schedule(list(teams), availability_map, LOCKED_GROUPS, OPENING_MATCH, num_weeks)
         
         if u_count < best_unscheduled_count:
