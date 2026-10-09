@@ -1,37 +1,37 @@
 Note: Still 1 impossible matches.
-Knockout Clash Risk Score: 230
+Knockout Clash Risk Score: 110
 
 --- TOURNAMENT GROUPS ---
 Group A: Under CTRL , Nezam eltayebat, khaly w sohabo, 3azema
-Group B: 3 sayma, Antesh, Ya Sater FC, nozha
-Group C: El hagamin , Royal house, Mazareeta fc, el katayef wel latayef
-Group D: Last dance, Flamengo, Wax, Eldido
+Group B: 3 sayma, el katayef wel latayef, Antesh, Ya Sater FC
+Group C: El hagamin , Royal house, Mazareeta fc, Eldido
+Group D: Last dance, Flamengo, Wax, nozha
 
 --- FINAL TOURNAMENT SCHEDULE ---
 
 [ W1 - Sunday, Oct 11, 2026 at 12:00 ]
   - [Group Stage (OPENING MATCH)] Under CTRL  vs khaly w sohabo (Pitch 1)
 
+[ W1 - Monday, Oct 12, 2026 at 12:00 ]
+  - [Group Stage] El hagamin  vs Eldido (Pitch 1)
+  - [Group Stage] Wax vs nozha (Pitch 2)
+
 [ W1 - Tuesday, Oct 13, 2026 at 12:00 ]
   - [Group Stage] 3 sayma vs Ya Sater FC (Pitch 1)
-  - [Group Stage] Last dance vs Eldido (Pitch 2)
-
-[ W1 - Tuesday, Oct 13, 2026 at 16:30 ]
-  - [Group Stage] Royal house vs el katayef wel latayef (Pitch 1)
+  - [Group Stage] Last dance vs nozha (Pitch 2)
 
 [ W1 - Wednesday, Oct 14, 2026 at 12:00 ]
-  - [Group Stage] El hagamin  vs el katayef wel latayef (Pitch 1)
-  - [Group Stage] 3 sayma vs Antesh (Pitch 2)
-
-[ W1 - Wednesday, Oct 14, 2026 at 12:30 ]
-  - [Group Stage] Flamengo vs Eldido (Pitch 1)
+  - [Group Stage] 3 sayma vs Antesh (Pitch 1)
+  - [Group Stage] Flamengo vs nozha (Pitch 2)
 
 [ W1 - Wednesday, Oct 14, 2026 at 15:30 ]
   - [Group Stage] Nezam eltayebat vs khaly w sohabo (Pitch 1)
 
+[ W1 - Wednesday, Oct 14, 2026 at 16:00 ]
+  - [Group Stage] el katayef wel latayef vs Ya Sater FC (Pitch 1)
+
 [ W1 - Thursday, Oct 15, 2026 at 12:00 ]
   - [Group Stage] El hagamin  vs Royal house (Pitch 1)
-  - [Group Stage] Antesh vs nozha (Pitch 2)
 
 [ W2 - Saturday, Oct 17, 2026 at 12:00 ]
   - [Group Stage] khaly w sohabo vs 3azema (Pitch 1)
@@ -42,7 +42,7 @@ Group D: Last dance, Flamengo, Wax, Eldido
 
 [ W2 - Sunday, Oct 18, 2026 at 12:00 ]
   - [Group Stage] Last dance vs Flamengo (Pitch 1)
-  - [Group Stage] Wax vs Eldido (Pitch 2)
+  - [Group Stage] 3 sayma vs el katayef wel latayef (Pitch 2)
 
 [ W2 - Sunday, Oct 18, 2026 at 13:30 ]
   - [Group Stage] Nezam eltayebat vs 3azema (Pitch 1)
@@ -50,22 +50,20 @@ Group D: Last dance, Flamengo, Wax, Eldido
 [ W2 - Sunday, Oct 18, 2026 at 14:30 ]
   - [Group Stage] Antesh vs Ya Sater FC (Pitch 1)
 
-[ W2 - Monday, Oct 19, 2026 at 16:30 ]
-  - [Knockout] Quarter-Final 4 (TBD vs TBD) (Pitch 1)
+[ W2 - Monday, Oct 19, 2026 at 12:00 ]
+  - [Group Stage] Royal house vs Eldido (Pitch 1)
 
 [ W2 - Tuesday, Oct 20, 2026 at 12:00 ]
-  - [Group Stage] Ya Sater FC vs nozha (Pitch 1)
-  - [Group Stage] Under CTRL  vs 3azema (Pitch 2)
-
-[ W2 - Tuesday, Oct 20, 2026 at 15:00 ]
   - [Group Stage] Last dance vs Wax (Pitch 1)
+  - [Group Stage] Under CTRL  vs 3azema (Pitch 2)
 
 [ W2 - Tuesday, Oct 20, 2026 at 16:30 ]
   - [Knockout] Quarter-Final 3 (TBD vs TBD) (Pitch 1)
+  - [Knockout] Quarter-Final 4 (TBD vs TBD) (Pitch 2)
 
 [ W2 - Wednesday, Oct 21, 2026 at 12:00 ]
-  - [Group Stage] Mazareeta fc vs el katayef wel latayef (Pitch 1)
-  - [Group Stage] 3 sayma vs nozha (Pitch 2)
+  - [Group Stage] Mazareeta fc vs Eldido (Pitch 1)
+  - [Group Stage] el katayef wel latayef vs Antesh (Pitch 2)
 
 [ W2 - Wednesday, Oct 21, 2026 at 16:30 ]
   - [Knockout] Quarter-Final 1 (TBD vs TBD) (Pitch 1)
